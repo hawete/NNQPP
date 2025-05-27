@@ -1,0 +1,1 @@
+This folder contains scripts for downloading public datasets used in the project.

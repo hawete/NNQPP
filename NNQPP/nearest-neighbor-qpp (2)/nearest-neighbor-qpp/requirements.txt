@@ -1,0 +1,7 @@
+faiss-cpu
+scikit-learn
+sentence-transformers
+pandas
+numpy
+tqdm
+matplotlib
