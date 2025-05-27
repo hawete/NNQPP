@@ -1,81 +1,37 @@
-import argparse
-import numpy as np
-from sentence_transformers import SentenceTransformer
-from sklearn.metrics.pairwise import cosine_similarity
-import json
-import os
+# main.py
 
-# -----------------------------
-# Helper functions
-# -----------------------------
+import pandas as pd
+from sentence_transformers import SentenceTransformer, util
 
-def load_queries(filepath):
-    """Load queries from a TSV or TXT file."""
-    queries = []
-    with open(filepath, 'r', encoding='utf-8') as f:
-        for line in f:
-            queries.append(line.strip())
-    return queries
+def load_data(query_file, doc_file):
+    queries = pd.read_csv(query_file, sep='\t')
+    documents = pd.read_csv(doc_file, sep='\t')
+    return queries, documents
 
-def load_performance_scores(filepath):
-    """Load ground-truth performance scores for queries."""
-    with open(filepath, 'r', encoding='utf-8') as f:
-        return [float(line.strip()) for line in f]
+def encode_texts(texts, model):
+    return model.encode(texts, convert_to_tensor=True)
 
-def compute_embeddings(queries, model_name='sentence-transformers/all-MiniLM-L6-v2'):
-    """Compute dense embeddings for each query."""
-    model = SentenceTransformer(model_name)
-    embeddings = model.encode(queries, convert_to_tensor=True)
-    return embeddings
+def main():
+    # Load real data
+    queries, documents = load_data("data/queries.tsv", "data/documents.tsv")
 
-def knn_predict(query_embed, all_embeds, perf_scores, k=10):
-    """Predict performance score using k-NN."""
-    sims = cosine_similarity(query_embed.reshape(1, -1), all_embeds)[0]
-    top_k_idx = np.argsort(sims)[-k:]
-    return np.mean([perf_scores[i] for i in top_k_idx])
+    # Load embedding model
+    model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 
-# -----------------------------
-# Main Pipeline
-# -----------------------------
+    # Encode queries and documents
+    query_embeddings = encode_texts(queries["query"].tolist(), model)
+    doc_texts = (documents["title"] + " " + documents["body"]).tolist()
+    doc_embeddings = encode_texts(doc_texts, model)
 
-def main(args):
-    print("Loading queries...")
-    queries = load_queries(args.query_file)
-    print(f"Loaded {len(queries)} queries.")
+    # Compute similarity (e.g., for the first query)
+    scores = util.cos_sim(query_embeddings[0], doc_embeddings)
+    top_k = min(5, len(documents))
+    top_results = scores[0].topk(top_k)
 
-    print("Loading performance scores...")
-    scores = load_performance_scores(args.score_file)
-
-    print("Encoding queries...")
-    embeddings = compute_embeddings(queries, model_name=args.encoder)
-
-    print("Predicting performance...")
-    predictions = []
-    for i in range(len(queries)):
-        query_embed = embeddings[i].cpu().numpy()
-        other_embeds = np.delete(embeddings.cpu().numpy(), i, axis=0)
-        other_scores = scores[:i] + scores[i+1:]
-        pred = knn_predict(query_embed, other_embeds, other_scores, k=args.k)
-        predictions.append(pred)
-
-    print("Saving predictions...")
-    os.makedirs(args.output_dir, exist_ok=True)
-    with open(os.path.join(args.output_dir, "predictions.json"), "w") as f:
-        json.dump(predictions, f)
-
-    print("Done!")
-
-# -----------------------------
-# Command-line Arguments
-# -----------------------------
+    print(f"\nQuery: {queries['query'][0]}")
+    print("\nTop documents:")
+    for score, idx in zip(*top_results):
+        print(f"{documents.iloc[idx]['docid']}: {score:.4f}")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--query_file", type=str, default="data/queries.txt", help="Path to query file")
-    parser.add_argument("--score_file", type=str, default="data/scores.txt", help="Path to ground-truth performance scores")
-    parser.add_argument("--encoder", type=str, default="sentence-transformers/all-MiniLM-L6-v2", help="Sentence encoder to use")
-    parser.add_argument("--k", type=int, default=10, help="Number of neighbors")
-    parser.add_argument("--output_dir", type=str, default="outputs", help="Directory to store predictions")
-
-    args = parser.parse_args()
-    main(args)
+    main()
