@@ -22,4 +22,4 @@ doc_embeddings = model.encode(documents)
 
 # Predict QPP score
 score = predict_performance(query_embedding, doc_embeddings)
-print(f"\nPredicted performance score: {score:.3f}")
+print(f"\nPredicted performance rabouba score: {score:.3f}")
