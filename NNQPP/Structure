@@ -1,0 +1,9 @@
+nearest-neighbor-qpp/
+│
+├── data/                  # Dataset files or download scripts
+├── scripts/               # Preprocessing and utility scripts
+├── notebooks/             # Jupyter notebooks for exploration and visualization
+├── src/                   # Core source code (models, algorithms)
+├── requirements.txt       # Python package dependencies
+├── README.md              # Project description and usage
+└── LICENSE                # Project license
