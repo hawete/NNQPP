@@ -6,9 +6,9 @@ from src.predict import QPPPredictor
 from sklearn.metrics import ndcg_score
 from scipy.stats import spearmanr, kendalltau
 
-# Load a portion of MS MARCO dataset
 print("Loading MS MARCO dataset...")
-dataset = load_dataset("ms_marco", "v2.1", split="validation[:0.1%]")  # Use a small subset for testing
+dataset = load_dataset("ms_marco", "v2.1", split="validation")
+dataset = dataset.shuffle(seed=42).select(range(100))  # Use only 100 queries
 
 # Load SentenceTransformer model
 model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
