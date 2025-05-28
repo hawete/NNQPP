@@ -3,7 +3,9 @@
 import numpy as np
 
 class QPPPredictor:
-    def predict_performance(self, query_embedding, doc_embeddings):
+    def predict(self, query: str) -> float:
+        # Is this using any real logic or model?
+        return random.random()  # or something equally untrained?
         """
         Predicts a simple QPP score by computing the mean cosine similarity
         between the query and each of the document embeddings.
