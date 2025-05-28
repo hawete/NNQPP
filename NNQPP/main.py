@@ -19,7 +19,14 @@ model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
 # Compute embeddings
 query_embedding = model.encode(query)
 doc_embeddings = model.encode(documents)
+# Compute embeddings
+query_embedding = model.encode(query)
+doc_embeddings = model.encode(documents)
 
-# Predict QPP score
-score = predict_performance(query_embedding, doc_embeddings)
+# Instantiate your QPP Predictor class
+qpp_predictor = QPPPredictor()
+
+# Predict QPP score using the instance
+score = qpp_predictor.predict_performance(query_embedding, doc_embeddings)
+
 print(f"\nPredicted performance rabouba score: {score:.3f}")
