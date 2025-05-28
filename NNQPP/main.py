@@ -1,6 +1,6 @@
 from datasets import load_dataset
 from sentence_transformers import SentenceTransformer
-from src.predict import predict_performance
+from src.predict import QPPPredictor
 
 # Load the MS MARCO dataset from Hugging Face
 print("Loading MS MARCO dataset...")
