@@ -1,21 +1,27 @@
-from sentence_transformers import SentenceTransformer
+# src/predict.py
+
 import numpy as np
-import faiss
 
-# Load model globally
-model = SentenceTransformer('all-MiniLM-L6-v2')
+class QPPPredictor:
+    def predict_performance(self, query_embedding, doc_embeddings):
+        """
+        Predicts a simple QPP score by computing the mean cosine similarity
+        between the query and each of the document embeddings.
 
-# Dummy database
-database = ["machine learning", "deep learning", "information retrieval", "search engines"]
-scores = [0.85, 0.9, 0.8, 0.75]
+        Parameters:
+        - query_embedding (np.ndarray): Vector for the query
+        - doc_embeddings (np.ndarray): List or array of vectors for the documents
 
-# Pre-compute embeddings
-embeddings = model.encode(database)
-index = faiss.IndexFlatL2(embeddings.shape[1])
-index.add(embeddings)
+        Returns:
+        - float: A scalar score representing predicted query performance
+        """
+        # Normalize vectors
+        query_norm = np.linalg.norm(query_embedding)
+        doc_norms = np.linalg.norm(doc_embeddings, axis=1)
 
-def predict_query_performance(query, k=2):
-    query_emb = model.encode([query])
-    D, I = index.search(query_emb, k)
-    predicted_score = np.mean([scores[i] for i in I[0]])
-    return predicted_score
+        # Avoid division by zero
+        if query_norm == 0 or np.any(doc_norms == 0):
+            return 0.0
+
+        similarities = np.dot(doc_embeddings, query_embedding) / (doc_norms * query_norm)
+        return float(np.mean(similarities))
